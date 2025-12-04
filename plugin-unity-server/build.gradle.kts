@@ -34,6 +34,12 @@ teamcity {
             notes = changelog.renderItem(changelog.getLatest(), Changelog.OutputType.HTML)
         }
 
+        files {
+            into("kotlin-dsl") {
+                from("${rootProject.projectDir}/kotlin-dsl")
+            }
+        }
+
         // preserving the old archive name
         archiveName = project.name
     }

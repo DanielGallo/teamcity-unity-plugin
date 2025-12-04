@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dsl-extension kind="buildStep" type="unity" generateDslJar="true">
+    <class name="UnityBuildStep">
+        <description>Provides build facilities for Unity projects</description>
+    </class>
+    <function name="unity">
+        <description>
+            Adds a [Unity build step](https://plugins.jetbrains.com/plugin/11453-unity-support)
+            @see UnityBuildStep
+        </description>
+    </function>
+    <params>
+        <param name="teamcity.build.workingDir" dslName="workingDir" yaml-name="working-directory">
+            <description>
+                [Build working directory](https://www.jetbrains.com/help/teamcity/?Build+Working+Directory) for script,
+                specify it if it is different from the [checkout
+                directory](https://www.jetbrains.com/help/teamcity/?Build+Checkout+Directory).
+            </description>
+        </param>
+        <param name="projectPath" dslName="project">
+            <description>
+                Specify the path to the target project. If unspecified, the working directory will be used.
+            </description>
+        </param>
+        <param name="executeMethod" dslName="executeMethod">
+            <description>
+                Specify a static method reference to execute after the project is loaded.
+                The class should be located in the Assets/Editor project directory.
+            </description>
+        </param>
+        <param name="buildTarget" dslName="buildTarget">
+            <description>Specify an active build target before loading the project.</description>
+        </param>
+        <param name="buildPlayer" dslName="buildPlayer" type="compound">
+            <option name="">
+                <description>Default</description>
+            </option>
+            <option name="Linux" value="buildLinux32Player"/>
+            <option name="Linux64" value="buildLinux64Player"/>
+            <option name="LinuxUniversal" value="buildLinuxUniversalPlayer"/>
+            <option name="OSX" value="buildOSXPlayer"/>
+            <option name="OSX64" value="buildOSX64Player"/>
+            <option name="OSXUniversal" value="buildOSXUniversalPlayer"/>
+            <option name="Windows" value="buildWindowsPlayer"/>
+            <option name="Windows64" value="buildWindows64Player"/>
+        </param>
+        <param name="buildPlayerPath" dslName="playerPath"/>
+        <param name="runEditorTests" type="compound" dslName="runTests">
+            <option name="editorTests" value="true">
+                <description>Run editor tests from the project</description>
+                <param name="testPlatform" dslName="platform" type="compound">
+                    <option name="">
+                        <description>Default</description>
+                    </option>
+                    <option value="editmode" name="editmode"/>
+                    <option value="playmode" name="playmode"/>
+                    <option value="all" name="all">
+                        <description>All modes in sequence</description>
+                    </option>
+                </param>
+                <param name="testCategories" dslName="categories"/>
+                <param name="testNames" dslName="names"/>
+            </option>
+        </param>
+
+        <param name="detectionMode" dslName="detectionMode" type="compound">
+            <description>Unity detection mode</description>
+            <option value="auto" name="auto">
+                <param name="unityVersion" dslName="version">
+                    <description>
+                        Specify the required Unity version, e.g. 2018.2. If left blank, the version specified in the
+                        project settings will be selected if available. Otherwise, the latest Unity installed on the
+                        agent will be chosen for the build.
+                    </description>
+                </param>
+            </option>
+            <option value="manual" name="manual">
+                <param name="unityRoot" dslName="root">
+                    <description>
+                        Specify a custom path to Unity, e.g C:\UnityEditor\2022.3.15f1. Paths relative to the checkout
+                        directory are supported.
+                    </description>
+                </param>
+            </option>
+        </param>
+        <param name="noGraphics" dslName="noGraphics" type="boolean" trueValue="true" falseValue="">
+            <description>Do not initialize the graphics device</description>
+        </param>
+        <param name="silentCrashes" dslName="silentCrashes" type="boolean" trueValue="true" falseValue="">
+            <description>Do not display the error dialog when a standalone player crashes</description>
+        </param>
+        <param name="noQuit" dslName="noQuit" type="boolean" trueValue="true" falseValue="">
+            <description>Do not quit the Unity Editor after other commands have finished executing</description>
+        </param>
+        <param name="arguments" dslName="arguments"/>
+
+    </params>
+</dsl-extension>
