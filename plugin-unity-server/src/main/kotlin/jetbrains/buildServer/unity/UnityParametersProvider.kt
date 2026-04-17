@@ -21,6 +21,9 @@ class UnityParametersProvider {
     val buildPlayerPath: String
         get() = UnityConstants.PARAM_BUILD_PLAYER_PATH
 
+    val buildProfile: String
+        get() = UnityConstants.PARAM_BUILD_PROFILE
+
     val unityVersion: String
         get() = UnityConstants.PARAM_UNITY_VERSION
 

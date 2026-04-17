@@ -71,6 +71,11 @@ class UnityRunnerRunType(
                 builder.addParameter("Execute method: $it")
             }
         }
+        parameters[UnityConstants.PARAM_BUILD_PROFILE]?.let {
+            if (it.isNotBlank()) {
+                builder.addParameter("Build profile: $it")
+            }
+        }
         parameters[UnityConstants.PARAM_BUILD_TARGET]?.let {
             if (it.isNotBlank()) {
                 builder.addParameter("Build target: $it")

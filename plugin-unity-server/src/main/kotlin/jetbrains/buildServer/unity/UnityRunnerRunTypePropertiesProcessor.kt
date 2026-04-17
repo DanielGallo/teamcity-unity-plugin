@@ -17,6 +17,16 @@ class UnityRunnerRunTypePropertiesProcessor : PropertiesProcessor {
             }
         }
 
+        val buildProfile = properties?.get(UnityConstants.PARAM_BUILD_PROFILE)?.trim()
+        if (!buildProfile.isNullOrEmpty() && !buildProfile.endsWith(".asset")) {
+            invalidProperties.add(
+                InvalidProperty(
+                    UnityConstants.PARAM_BUILD_PROFILE,
+                    "Build Profile path should point to a .asset file (e.g. Assets/Settings/Build Profiles/MyProfile.asset)",
+                )
+            )
+        }
+
         return invalidProperties
     }
 }

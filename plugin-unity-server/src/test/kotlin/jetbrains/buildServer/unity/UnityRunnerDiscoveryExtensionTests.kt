@@ -82,6 +82,7 @@ class UnityRunnerDiscoveryExtensionTests {
                 mockk {
                     every { name } returns "Assets"
                     every { isLeaf } returns false
+                    every { children } returns emptyList()
                 },
                 mockk {
                     every { name } returns "ProjectSettings"

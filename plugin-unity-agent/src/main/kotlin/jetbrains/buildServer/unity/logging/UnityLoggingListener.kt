@@ -14,11 +14,14 @@ import java.util.*
 class UnityLoggingListener(
     private val logger: BuildProgressLogger,
     private val problemsProvider: LineStatusProvider,
+    private val suppressBuildProblems: Boolean = false,
 ) : ProcessListenerAdapter() {
 
     private var blocks = Stack<LogBlock>()
     private val currentBlock: LogBlock
         get() = if (blocks.isEmpty()) defaultBlock else blocks.peek()
+
+    private val pendingBuildProblems = mutableListOf<String>()
 
     override fun onStandardOutput(text: String) {
         currentBlock.apply {
@@ -47,6 +50,19 @@ class UnityLoggingListener(
             it.isBlockStart(text)
         }
         if (foundBlock != null && foundBlock != currentBlock) {
+            if (foundBlock is BuildProfileBlock) {
+                foundBlock.extractProfilePath(text)?.let { profilePath ->
+                    val escaped = profilePath
+                        .replace("|", "||")
+                        .replace("'", "|'")
+                        .replace("[", "|[")
+                        .replace("]", "|]")
+                        .replace("\n", "|n")
+                        .replace("\r", "|r")
+                    logger.message("##teamcity[setParameter name='${BuildProfileBlock.ACTIVE_BUILD_PROFILE_PARAM}' value='$escaped']")
+                }
+            }
+
             if (currentBlock != defaultBlock) {
                 logBlockClosed(currentBlock.name)
                 blocks.pop()
@@ -74,15 +90,27 @@ class UnityLoggingListener(
         }
     }
 
+    override fun processFinished(exitCode: Int) {
+        if (exitCode != 0 && !suppressBuildProblems) {
+            pendingBuildProblems.forEach { logger.message(BuildProblem(it).asString()) }
+        }
+        pendingBuildProblems.clear()
+    }
+
     private fun logMessage(text: String) {
         val message = currentBlock.getText(text)
         val status = problemsProvider.getLineStatus(message)
-        val serviceMessage = when (status) {
-            LineStatus.Warning -> Message(message, Status.WARNING.text, null).asString()
-            LineStatus.Error -> BuildProblem(message).asString()
-            else -> message
+        when (status) {
+            LineStatus.Warning -> logger.message(Message(message, Status.WARNING.text, null).asString())
+            LineStatus.Error -> {
+                // Buffer errors and only emit BuildProblem at process exit if Unity actually failed
+                // (exit code != 0). Unity sometimes recovers from intermediate compilation errors
+                // (e.g. via API Updater) and exits successfully — we must not poison the build for those.
+                pendingBuildProblems.add(message)
+                logger.message(message)
+            }
+            else -> logger.message(message)
         }
-        logger.message(serviceMessage)
     }
 
     private fun logBlockOpened(name: String) {
@@ -96,6 +124,7 @@ class UnityLoggingListener(
     companion object {
         private val defaultBlock = DefaultBlock()
         private val loggers = listOf(
+            BuildProfileBlock(),
             BuildReportBlock(),
             CommandLineBlock(),
             CompileBlock(),
