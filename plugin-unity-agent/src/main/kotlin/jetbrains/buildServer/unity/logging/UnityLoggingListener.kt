@@ -50,19 +50,6 @@ class UnityLoggingListener(
             it.isBlockStart(text)
         }
         if (foundBlock != null && foundBlock != currentBlock) {
-            if (foundBlock is BuildProfileBlock) {
-                foundBlock.extractProfilePath(text)?.let { profilePath ->
-                    val escaped = profilePath
-                        .replace("|", "||")
-                        .replace("'", "|'")
-                        .replace("[", "|[")
-                        .replace("]", "|]")
-                        .replace("\n", "|n")
-                        .replace("\r", "|r")
-                    logger.message("##teamcity[setParameter name='${BuildProfileBlock.ACTIVE_BUILD_PROFILE_PARAM}' value='$escaped']")
-                }
-            }
-
             if (currentBlock != defaultBlock) {
                 logBlockClosed(currentBlock.name)
                 blocks.pop()
@@ -124,7 +111,6 @@ class UnityLoggingListener(
     companion object {
         private val defaultBlock = DefaultBlock()
         private val loggers = listOf(
-            BuildProfileBlock(),
             BuildReportBlock(),
             CommandLineBlock(),
             CompileBlock(),
