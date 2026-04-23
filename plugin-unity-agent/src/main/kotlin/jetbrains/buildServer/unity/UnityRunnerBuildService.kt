@@ -323,14 +323,30 @@ class UnityRunnerBuildService(
     private fun makePrewarmCommandLine(): ProgramCommandLine {
         val unityVersion = unityEnvironment.unityVersion
         val unityPath = unityEnvironment.unityPath
-        val buildTarget = parameters.value[PARAM_BUILD_TARGET]?.trim()
+        val buildTarget = parameters.value[PARAM_BUILD_TARGET]?.trim()?.takeIf { it.isNotEmpty() }
+        val buildProfile = parameters.value[PARAM_BUILD_PROFILE]?.trim()?.takeIf { it.isNotEmpty() }
 
-        logger.message("Pre-warming build target '$buildTarget' before activating build profile.")
+        logger.message(
+            if (buildTarget != null) {
+                "Pre-warming build target '$buildTarget' before activating build profile."
+            } else {
+                "Pre-warming project for build profile '$buildProfile'."
+            }
+        )
 
         val arguments = sequence {
             yield(ARG_BATCH_MODE)
             projectPathArg(unityVersion)
-            argIfNotEmpty(PARAM_BUILD_TARGET, ARG_BUILD_TARGET)
+            // On a clean checkout the Library hasn't been imported for this platform yet.
+            // Using -buildTarget (preferred) or -activeBuildProfile in a quit-only run lets Unity
+            // reimport assets before the real build; compilation errors here are expected and ignored.
+            if (buildTarget != null) {
+                yield(ARG_BUILD_TARGET)
+                yield(buildTarget)
+            } else if (buildProfile != null) {
+                yield(ARG_ACTIVE_BUILD_PROFILE)
+                yield(buildProfile)
+            }
             argIfTrue(PARAM_NO_GRAPHICS, ARG_NO_GRAPHICS)
             yield(ARG_QUIT)
         }.toMutableList()
@@ -480,7 +496,7 @@ class UnityRunnerBuildService(
         ): Sequence<UnityRunnerBuildService> {
             val buildProfile = context.runnerParameters[PARAM_BUILD_PROFILE]?.trim()?.takeIf { it.isNotEmpty() }
             val buildTarget = context.runnerParameters[PARAM_BUILD_TARGET]?.trim()?.takeIf { it.isNotEmpty() }
-            val needsPrewarm = buildProfile != null && buildTarget != null
+            val needsPrewarm = buildProfile != null
 
             return sequence {
                 if (needsPrewarm) {

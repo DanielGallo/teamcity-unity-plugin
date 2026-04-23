@@ -296,7 +296,7 @@ class UnityRunnerBuildServiceTest {
     }
 
     @Test
-    fun `createAdapters returns no prewarm service when buildProfile set without buildTarget`() {
+    fun `createAdapters returns prewarm service when buildProfile set without buildTarget`() {
         every { unityBuildRunnerContextMock.runnerParameters } returns mapOf(
             UnityConstants.PARAM_BUILD_PROFILE to "Assets/Settings/Build Profiles/Android.asset",
         )
@@ -308,7 +308,7 @@ class UnityRunnerBuildServiceTest {
             fileSystemServiceMock,
         ).toList()
 
-        adapters shouldHaveSize 1
+        adapters shouldHaveSize 2
     }
 
     @Test
