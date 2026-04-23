@@ -1,5 +1,6 @@
 
 
+
 package jetbrains.buildServer.unity.logging
 
 import jetbrains.buildServer.agent.BuildProgressLogger
@@ -20,8 +21,6 @@ class UnityLoggingListener(
     private var blocks = Stack<LogBlock>()
     private val currentBlock: LogBlock
         get() = if (blocks.isEmpty()) defaultBlock else blocks.peek()
-
-    private val pendingBuildProblems = mutableListOf<String>()
 
     override fun onStandardOutput(text: String) {
         currentBlock.apply {
@@ -77,24 +76,16 @@ class UnityLoggingListener(
         }
     }
 
-    override fun processFinished(exitCode: Int) {
-        if (exitCode != 0 && !suppressBuildProblems) {
-            pendingBuildProblems.forEach { logger.message(BuildProblem(it).asString()) }
-        }
-        pendingBuildProblems.clear()
-    }
-
     private fun logMessage(text: String) {
         val message = currentBlock.getText(text)
-        val status = problemsProvider.getLineStatus(message)
-        when (status) {
+        when (problemsProvider.getLineStatus(message)) {
             LineStatus.Warning -> logger.message(Message(message, Status.WARNING.text, null).asString())
             LineStatus.Error -> {
-                // Buffer errors and only emit BuildProblem at process exit if Unity actually failed
-                // (exit code != 0). Unity sometimes recovers from intermediate compilation errors
-                // (e.g. via API Updater) and exits successfully — we must not poison the build for those.
-                pendingBuildProblems.add(message)
-                logger.message(message)
+                if (suppressBuildProblems) {
+                    logger.message(Message(message, Status.WARNING.text, null).asString())
+                } else {
+                    logger.message(BuildProblem(message).asString())
+                }
             }
             else -> logger.message(message)
         }

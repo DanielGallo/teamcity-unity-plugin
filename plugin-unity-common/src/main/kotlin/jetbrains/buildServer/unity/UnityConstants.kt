@@ -21,6 +21,7 @@ object UnityConstants {
     const val PARAM_BUILD_PLAYER = "buildPlayer"
     const val PARAM_BUILD_PLAYER_PATH = "buildPlayerPath"
     const val PARAM_BUILD_PROFILE = "buildProfile"
+    const val ASSET_FILE_EXTENSION = ".asset"
     const val PARAM_NO_GRAPHICS = "noGraphics"
     const val PARAM_NO_QUIT = "noQuit"
     const val PARAM_ARGUMENTS = "arguments"

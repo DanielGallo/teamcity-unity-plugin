@@ -107,32 +107,7 @@ class UnityRunnerBuildService(
 
         val buildProfile = parameters.value[PARAM_BUILD_PROFILE]?.trim()?.takeIf { it.isNotEmpty() }
 
-        if (buildProfile != null) {
-            if (unityVersion.major < UNITY_6_MAJOR_VERSION) {
-                logger.message(
-                    Message(
-                        "Build Profiles require Unity 6 (6000.x) or later. The current Unity version is $unityVersion.",
-                        WARNING.text,
-                        null,
-                    ).asString()
-                )
-            }
-            val buildPlayerPath = parameters.value[PARAM_BUILD_PLAYER_PATH]?.trim()
-            val executeMethod = parameters.value[PARAM_EXECUTE_METHOD]?.trim()
-            val runTests = parameters.value[PARAM_RUN_EDITOR_TESTS]?.toBoolean() ?: false
-            if (buildPlayerPath.isNullOrEmpty() && executeMethod.isNullOrEmpty() && !runTests) {
-                logger.message(
-                    Message(
-                        "Build Profile is set but no 'Player output path' or 'Execute method' is configured. " +
-                            "Unity will load the project with the active profile and then quit without performing a build. " +
-                            "Set 'Player output path' to produce a player build via '-build <path>', " +
-                            "or specify an 'Execute method' to invoke a custom build script.",
-                        WARNING.text,
-                        null,
-                    ).asString()
-                )
-            }
-        }
+        buildProfile?.let { validateBuildProfile(it, unityVersion) }
 
         val arguments: MutableList<String> = sequence {
             yield(ARG_BATCH_MODE)
@@ -201,28 +176,48 @@ class UnityRunnerBuildService(
     }
 
     private suspend fun SequenceScope<String>.buildPlayerArg() {
-        parameters.value[PARAM_BUILD_PLAYER]?.let {
-            val playerPath = parameters.value[PARAM_BUILD_PLAYER_PATH]
-            if (it.isNotEmpty() && !playerPath.isNullOrEmpty()) {
-                var playerFile = fileSystemService.createPath(playerPath.trim())
-                if (!playerFile.isAbsolute) {
-                    playerFile = fileSystemService.createPath(workingDirectory.toPath(), playerPath.trim())
-                }
-                yield("-" + it.trim())
-                yield(resolvePath(playerFile.absolutePathString()))
-            }
+        val playerType = parameters.value[PARAM_BUILD_PLAYER]
+        if (!playerType.isNullOrEmpty()) {
+            buildArg("-" + playerType.trim())
         }
     }
 
-    private suspend fun SequenceScope<String>.buildArg() {
+    private suspend fun SequenceScope<String>.buildArg(argName: String = ARG_BUILD) {
         val playerPath = parameters.value[PARAM_BUILD_PLAYER_PATH]
         if (!playerPath.isNullOrEmpty()) {
             var playerFile = fileSystemService.createPath(playerPath.trim())
             if (!playerFile.isAbsolute) {
                 playerFile = fileSystemService.createPath(workingDirectory.toPath(), playerPath.trim())
             }
-            yield(ARG_BUILD)
+            yield(argName)
             yield(resolvePath(playerFile.absolutePathString()))
+        }
+    }
+
+    private fun validateBuildProfile(buildProfile: String, unityVersion: UnityVersion) {
+        if (unityVersion.major < UNITY_6_MAJOR_VERSION) {
+            logger.message(
+                Message(
+                    "Build Profiles require Unity 6 (6000.x) or later. The current Unity version is $unityVersion.",
+                    WARNING.text,
+                    null,
+                ).asString()
+            )
+        }
+        val buildPlayerPath = parameters.value[PARAM_BUILD_PLAYER_PATH]?.trim()
+        val executeMethod = parameters.value[PARAM_EXECUTE_METHOD]?.trim()
+        val runTests = parameters.value[PARAM_RUN_EDITOR_TESTS]?.toBoolean() ?: false
+        if (buildPlayerPath.isNullOrEmpty() && executeMethod.isNullOrEmpty() && !runTests) {
+            logger.message(
+                Message(
+                    "Build Profile is set but no 'Player output path' or 'Execute method' is configured. " +
+                        "Unity will load the project with the active profile and then quit without performing a build. " +
+                        "Set 'Player output path' to produce a player build via '-build <path>', " +
+                        "or specify an 'Execute method' to invoke a custom build script.",
+                    WARNING.text,
+                    null,
+                ).asString()
+            )
         }
     }
 

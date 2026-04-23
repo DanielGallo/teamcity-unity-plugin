@@ -68,4 +68,25 @@ class UnityRunnerRunTypePropertiesProcessorTest {
             Assert.assertEquals(actual.propertyName, expected.propertyName)
         }
     }
+
+    @DataProvider
+    fun buildProfileValidationData(): Array<Array<Any?>> {
+        return arrayOf(
+            arrayOf<Any?>("", false),
+            arrayOf<Any?>("Assets/Settings/Build Profiles/Android.asset", false),
+            arrayOf<Any?>("Assets/Settings/Build Profiles/Android", true),
+            arrayOf<Any?>("Assets/Settings/Build Profiles/Android.txt", true),
+        )
+    }
+
+    @Test(dataProvider = "buildProfileValidationData")
+    fun `build profile path validation`(buildProfile: String, expectsInvalidProperty: Boolean) {
+        val processor = UnityRunnerRunTypePropertiesProcessor()
+        val params = mutableMapOf(UnityConstants.PARAM_BUILD_PROFILE to buildProfile)
+
+        val invalidProperties = processor.process(params)
+
+        val hasInvalidBuildProfile = invalidProperties.any { it.propertyName == UnityConstants.PARAM_BUILD_PROFILE }
+        Assert.assertEquals(hasInvalidBuildProfile, expectsInvalidProperty)
+    }
 }

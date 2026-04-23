@@ -18,7 +18,7 @@ class UnityRunnerRunTypePropertiesProcessor : PropertiesProcessor {
         }
 
         val buildProfile = properties?.get(UnityConstants.PARAM_BUILD_PROFILE)?.trim()
-        if (!buildProfile.isNullOrEmpty() && !buildProfile.endsWith(".asset")) {
+        if (!buildProfile.isNullOrEmpty() && !buildProfile.endsWith(UnityConstants.ASSET_FILE_EXTENSION)) {
             invalidProperties.add(
                 InvalidProperty(
                     UnityConstants.PARAM_BUILD_PROFILE,
