@@ -1,6 +1,3 @@
-
-
-
 package jetbrains.buildServer.unity.logging
 
 import jetbrains.buildServer.agent.BuildProgressLogger

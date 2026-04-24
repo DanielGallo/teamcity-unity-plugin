@@ -1,4 +1,3 @@
-
 package jetbrains.buildServer.unity.fetchers
 
 import io.kotest.matchers.collections.shouldBeEmpty
